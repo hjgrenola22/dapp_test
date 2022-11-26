@@ -17,36 +17,46 @@
             $("#admin").click(() => {
 
                 //$post.("/create_adminWallet", {data, status},())
-
+                //var id = $('#')
             })
         });
     </script>
        
-    <style>
-         h1 {
-            font-weight: 700;
-        }
+       <style>
+        h1 {
+           font-weight: 700;
+       }
 
-        body {margin: 40px;}
-    </style>
+       body {margin: 40px;}
+   </style>
 </head>
 <body>
 
     <!-- title -->
-    <div>
-        <h1>자산 관리 사이트</h1>
+    <div class="form-group">
+        <h1>관리자 인증 발급 페이지</h1>
     </div>
 
+    <br><br>
     <!-- title_contents -->
-    <div>
-        <h2>메뉴를 선택하세요</h2>
+    <div class="form-group">
+        <h2>관리자 ID와 패스워드를 입력하라 </h2>
     </div>
-    
+    <br>
     <!-- body -->
     <div>
-        <a href="SE_admin_wallet.html" class="btn btn-success" id="admin">관리자 지갑생성</a>
-        <br><br>
-        <a href="SE_user_wallet.html" class="btn btn-primary" id="user">관리자 지갑생성</a>
+        <div class="form-group">
+            <label for="id" class="form-label">ID</label>
+            <input type="text" id="id" class="form-control">
+        </div>
+        <br>
+        <div class="form-group">
+            <label for="pwd" class="form-label">패스워드</label>
+            <input type="text" id="pwd" class="form-control">
+        </div>
+      
+        <br>
+        <input type="button" value="인증서 생성" id="btn-gen" class="btn btn-warning">
     </div><!-- body end -->
 
     <!-- footer -->

@@ -19,6 +19,10 @@
                 //$post.("/create_adminWallet", {data, status},())
                 var id = $('#id').val()
                 var pw = $('#pwd').val()
+
+                $.post('/admin_wallet', {id, pw},(data, status) => {
+                    console.log(data)
+                })
                 
             })
         });

@@ -14,14 +14,13 @@
     <script>
         $(() => {
 
-            $("#admin").click(() => {
-
-                //$post.("/create_adminWallet", {data, status},())
+            $("#btn-gen").click(() => {
                 var id = $('#id').val()
                 var pw = $('#pwd').val()
 
+                console.log(id, pw)
                 $.post('/admin_wallet', {id, pw},(data, status) => {
-                    console.log(data)
+                    console.log("data"+data)
                 })
                 
             })

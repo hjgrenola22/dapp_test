@@ -21,6 +21,12 @@
                 console.log(id, pw)
                 $.post('/admin_wallet', {id, pw},(data, status) => {
                     console.log("data"+data)
+
+                    $('#result').empty();
+                    $('#result').append(`<br>출력 결과입니다`)
+                    $('#result').append(`<br>result:${data.result}`)
+                    $('#result').append(`<br>${data.msg}`)
+
                 })
                 
             })
@@ -57,7 +63,7 @@
         <br>
         <div class="form-group">
             <label for="pwd" class="form-label">패스워드</label>
-            <input type="text" id="pwd" class="form-control">
+            <input type="password" id="pwd" class="form-control">
         </div>
       
         <br>
@@ -65,7 +71,7 @@
     </div><!-- body end -->
 
     <!-- footer -->
-    <div></div>
+    <div id="result"></div>
     
 
 </body>

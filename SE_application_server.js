@@ -34,6 +34,10 @@ app.get("/", (req, res) => {
     res.end() -> 있으면 안된다 */
 })
 
+ //현재 디렉토리에서 test-network의 org, msp 등에 대한 정보가 담겨있는 json 파일을 찾아간다       
+ const ccpPath = path.resolve(__dirname, '..', '..', '..', 'fabric-samples', 'test-network', 'organizations', 'peerOrganizations', 'org1.example.com', 'connection-org1.json');
+ const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'))
+
 app.post('/admin_wallet', async (req, res) => {
 
     var id = req.body.id;
@@ -41,12 +45,7 @@ app.post('/admin_wallet', async (req, res) => {
 
     console.log(`admin_wallet id:${id} ,pw:${pw}`)
 
-    try{
-
-        //현재 디렉토리에서 test-network의 org, msp 등에 대한 정보가 담겨있는 json 파일을 찾아간다       
-        const ccpPath = path.resolve(__dirname, '..', '..', '..', 'fabric-samples', 'test-network', 'organizations', 'peerOrganizations', 'org1.example.com', 'connection-org1.json');
-        
-        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'))
+    try{    
         const caInfo = ccp.certificateAuthorities['ca.org1.example.com'];
         
         //connection-org1.json 정보를 가져온다
@@ -101,6 +100,90 @@ app.post('/admin_wallet', async (req, res) => {
 
         res.status(200).json(jsonmsg)
     }
+})
+
+app.post('/user_wallet', async function(req, res){
+    var id = req.body.id;
+    var role = req.body.role;
+
+    //console.log(id, role)
+
+    try {
+        // Create a new CA client for interacting with the CA.
+        const caURL = ccp.certificateAuthorities['ca.org1.example.com'].url;
+        const ca = new FabricCAServices(caURL);
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+
+        // Check to see if we've already enrolled the user.
+        const userIdentity = await wallet.get(id);
+        if (userIdentity) {
+            console.log(`An identity for the user "${id}" already exists in the wallet`);
+
+            var str = `An identity for the user "${id}" already exists in the wallet`
+            var jsonmsg = {'result':'failed', 'msg':str}
+            res.status(200).json(jsonmsg)
+
+            return;
+        }
+
+        // Check to see if we've already enrolled the admin user.
+        const adminIdentity = await wallet.get('admin');
+        if (!adminIdentity) {
+            console.log('An identity for the admin user "admin" does not exist in the wallet');
+           
+            var str = 'An identity for the admin user "admin" does not exist in the wallet'
+            var jsonmsg = {'result':'failed', 'msg':str}
+            res.status(200).json(jsonmsg)
+
+            return;
+        }
+
+        // build a user object for authenticating with the CA
+        const provider = wallet.getProviderRegistry().getProvider(adminIdentity.type);
+        const adminUser = await provider.getUserContext(adminIdentity, 'admin');
+
+        // Register the user, enroll the user, and import the new identity into the wallet.
+        const secret = await ca.register({
+            affiliation: 'org1.department1',
+            enrollmentID: id,
+            role: role
+        }, adminUser);
+
+        console.log("secret:",secret)
+
+        const enrollment = await ca.enroll({
+            enrollmentID: id,
+            enrollmentSecret: secret
+        });
+        const x509Identity = {
+            credentials: {
+                certificate: enrollment.certificate,
+                privateKey: enrollment.key.toBytes(),
+            },
+            mspId: 'Org1MSP',
+            type: 'X.509',
+        };
+        await wallet.put(id, x509Identity);
+        console.log(`Successfully registered and enrolled admin user "${id}" and imported it into the wallet`);
+
+        var str = `Successfully registered and enrolled admin user "${id}" and imported it into the wallet`
+        var jsonmsg = {'result':'SUCCESS', 'msg':str}
+
+        res.status(200).json(jsonmsg)
+
+    } catch (error) {
+        console.error(`Failed to register user "appUser": ${error}`);
+       
+        var str = `Failed to register user "appUser": ${error}`
+        var jsonmsg = {'result':'failed', 'msg':str}
+
+        res.status(200).json(jsonmsg)
+    }
+
 })
 
 console.log(`PORT:${PORT} HOST:${HOST} is connected`)

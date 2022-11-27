@@ -11,29 +11,69 @@
     <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
 
     <style>
-        .container {
-            background-color: bisque;
-            color: black
+        body{
+            margin: 30px;
         }
 
+        .container {
+            background-color:darkslategray;
+            font-weight: 700;
+            color: white;
+            height: 150px;           
+        }
+
+        .footer{
+            text-align: center;
+        }
+
+        .btn-warning{
+            width: 100px;
+        }
     </style>
+
+    <script>
+        $(function(){
+            $('#btn-gen').click(function(){
+                var id = $('#id').val()
+                var role = $('#role').val()
+
+                console.log(id, role)
+                $.post('/user_wallet',{id, role},function(data, status  ){
+                    $('#result').empty();
+                    $('#result').append(`<br>출력 결과입니다`)
+                    $('#result').append(`<br>result:${data.result}`)
+                    $('#result').append(`<br>${data.msg}`)
+
+                })
+            })
+    
+        
+        })
+        
+    </script>
 </head>
 <body>
     <div><!--header-->
-        <h1>사용자 인증 페이지 입니다</h1>
+        <h1>사용자 인증 페이지 입니다</h1><br>
         <h3>ID 와 역할을 입력하시오</h3>
     </div><!--header end-->    
-
+    <br><br>
     <div class="container"><!-- body-->
-        <div class="body_id">
+        <div>
             <label for="id">ID</label>
             <input type="text" id="id" class="form-control">
         </div>
-        <div></div>
+        <div>
+            <label for="role">role</label>
+            <input type="text" id="role" class="form-control" value="client">
+        </div>
     </div><!-- body end-->
-
-    <div><!-- footer-->
-
+    <br>
+    <div class="footer"><!-- footer-->
+        <input type="button" value="사용자 인증서 생성" class="btn btn-warning" id="btn-gen">
     </div><!-- footer end-->
+    <div><!-- result-->
+        <div id="result"></div>
+    </div><!-- result end-->
 </body>
 </html>

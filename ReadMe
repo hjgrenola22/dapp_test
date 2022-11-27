@@ -9,3 +9,6 @@ DApp 으로 관리자, 사용자 등록
 2)사용자 단말기에 저장한 경우
 
 fabric-samples의 fabcar 예제는 2)을 적용
+
+관리자와 생성자의 지갑생성 - fabric-samples/fabcar 예제의 enrollAdmin.js, registerUser.js 참조
+

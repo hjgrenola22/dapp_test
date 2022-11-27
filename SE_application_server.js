@@ -43,31 +43,63 @@ app.post('/admin_wallet', async (req, res) => {
 
     try{
 
-        const ccpPath = path.resolve(__dirname, '..', '..', '..', 'fabric-samples', 'test-network', 'organizations', 'peerOrganizations', 'org1.example.com', 'connection-org1.json');
         //현재 디렉토리에서 test-network의 org, msp 등에 대한 정보가 담겨있는 json 파일을 찾아간다       
+        const ccpPath = path.resolve(__dirname, '..', '..', '..', 'fabric-samples', 'test-network', 'organizations', 'peerOrganizations', 'org1.example.com', 'connection-org1.json');
         
         const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'))
         const caInfo = ccp.certificateAuthorities['ca.org1.example.com'];
         
-        const caTLSCACerts = caInfo.tlsCACerts.pem;
         //connection-org1.json 정보를 가져온다
-
-        const ca = new FabricCAServices(caInfo.url, {trustedRoots: caTLSCACerts, verify:false}, caInfo.caName);
+        const caTLSCACerts = caInfo.tlsCACerts.pem;
+        
         //FabricCAServices로 네트워크에 접근 할 수 있는 ca 생성
-
-        const walletPath = path.join(process.cwd(), 'wallet')
+        const ca = new FabricCAServices(caInfo.url, {trustedRoots: caTLSCACerts, verify:false}, caInfo.caName);
+        
         /* process.cwd() node명령을 호출한 작업디렉터리의 절대경로
         /home/bstudent/dev/first-project/SE_application 여기에서
         wallet 디렉토리를 가져온다 */
-
-        const wallet = await Wallets.newFileSystemWallet(walletPath);
-        //wlletPath에 지갑을 만든다
-
+        const walletPath = path.join(process.cwd(), 'wallet')
         
+        //wlletPath에 가서 wallet을 객체화 한다
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        
+        //기존에 있는 wallet인지 체크
+        const admin_identity = await wallet.get(id)
+        if(admin_identity){
+            console.log(`An identity for the admin user "${id}" already exists in the wallet`);
 
-        console.log("process.cwd()"+process.cwd())
+            var str = `An identity for the admin user "${id}" already exists in the wallet`
+            var jsonmsg = {'result':'failed','msg':str}
+            res.status(200).json(jsonmsg)
+
+            return;
+        }
+
+        //ca에 가서 admin 인증서를 가져온다
+        const enrollment = await ca.enroll({enrollmentID:'admin', enrollmentSecret:'adminpw'})
+        const x509Identity = {
+            credentials: {
+                certificate: enrollment.certificate,
+                privateKey: enrollment.key.toBytes(),
+            },
+            mspId: 'Org1MSP',
+            type: 'X.509'
+        }
+        //id로 지갑생성
+        await wallet.put(id, x509Identity)
+        
+        console.log(`Successfully enrolled admin user "${id}" and imported it into the wallet`);
+        str = `Successfully enrolled admin user "${id}" and imported it into the wallet`
+        jsonmsg = {result:"SUCCESS",msg:str}
+
+        res.status(200).json(jsonmsg)
+
     }catch(error){
-        console.error(`Failed to enroll admin_wallet:${error} `)
+        console.error(`Failed to enroll admin_wallet:${error}`)
+        var str = `Failed to enroll admin_wallet:${error}`
+        var jsonmsg = {'result':'failed', 'msg':str}
+
+        res.status(200).json(jsonmsg)
     }
 })
 

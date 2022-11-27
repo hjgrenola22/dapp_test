@@ -183,7 +183,77 @@ app.post('/user_wallet', async function(req, res){
 
         res.status(200).json(jsonmsg)
     }
+})
 
+//자산 생성
+app.post('/createasset', async (req, res) => {
+    var cert = req.body.cert
+    var name = req.body.name
+    var color = req.body.color
+    var size = req.body.size
+    var owner = req.body.owner
+    var value = req.body.value
+
+    console.log(`asset-post: cert-${cert} name-${name} color-${color} size-${size} owner-${owner} appraisedValue-${value}`)
+
+    try {
+        /*자산생성에서 ca연결은 필요없다. 지갑 유무로 인증을 하고
+        cc에 있는 함수호출*/
+
+        // Create a new file system based wallet for managing identities.
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+
+        //지갑만 있으면 되기 때문에 관리자든 사용자든 상관없이 지갑 유무만 체크한다
+        const userIdentity = await wallet.get(cert);
+        if (!userIdentity) {
+            console.log(`An identity for the ${cert} not exists in the wallet`);
+
+            res.writeHead(200, {"Content-Type":"text/html; charset=utf-8"})
+            res.write("<h1>Express 서버에서 응답한 결과입니다.</h1>")
+            res.write(`<p>An identity for the ${cert} not exists in the wallet</p>`)
+            res.end()
+
+            return;
+        }
+
+        //블록체인 네트워크에 접속.  Gateway를 사용하기 위해서 상단에 import
+        const gateway = new Gateway();
+        await gateway.connect(ccp, {
+            wallet,
+            identity: cert,
+            discovery: { enabled: true, asLocalhost: true } //그냥 옵션 부분
+        })
+
+        const network = await gateway.getNetwork("mychannel");//채널 연결
+        const contract = network.getContract("basic");//채널 코드 연결
+        
+        //여기까지 ChanCode 호출 설정-------------------------------
+
+        //cc에서 CreateAsset 호출해서 자산 생성
+        await contract.submitTransaction('CreateAsset', name, color, size, owner, value);
+      
+        //다른 페이지로 결과 전송하기---------------------
+        const resultPath = path.jㄴoin(__dirname, "views/result.html")
+        var resultHTML = fs.readFileSync(resultPath, "utf-8")
+
+        str = `<p>Transaction(CreateAsset : ${name}) has been submiteed</P><br>`
+
+        resultHTML = resultHTML.replace("<dir></dir>", str)
+        res.status(200).send(resultHTML)
+        //다른 페이지로 결과 전송하기---------------------
+
+        await gateway.disconnect();
+
+    } catch (error) {
+        console.error(`Failed to create asset "${cert}": ${error}`);
+       
+        var str = `Failed to create asset "${cert}": ${error}`
+        var jsonmsg = {'result':'failed', 'msg':str}
+
+        res.status(200).json(jsonmsg)
+    }
+    
 })
 
 console.log(`PORT:${PORT} HOST:${HOST} is connected`)

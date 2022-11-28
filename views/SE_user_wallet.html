@@ -38,7 +38,7 @@
                 var role = $('#role').val()
 
                 console.log(id, role)
-                $.post('/user_wallet',{id, role},function(data, status  ){
+                $.post('/user_wallet',{id, role},function(data, status){
                     $('#result').empty();
                     $('#result').append(`<br>출력 결과입니다`)
                     $('#result').append(`<br>result:${data.result}`)

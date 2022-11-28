@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous" />
+
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+
+    <title>SE_readasset</title>
+
+    <style>
+        h1 {
+           font-weight: 700;
+       }
+
+       body {margin: 40px;}
+   </style>
+
+
+    <script>
+       $(function(){
+        
+            $('#btn-read').click(function(){
+                var cert = $('#cert').val()
+                var name = $('#name').val()
+
+                console.log(cert, name)
+                /* get은 click 안에 있어야 된다! 주의
+                클라인언트 측에선 /readasset 에서 / 있든 없든 상관없다
+                서버측에선 / 있어야한다 */
+
+                $.get('readasset',{cert, name}, (data, status) => {
+
+                    dataj = JSON.stringify(data.msg)
+                    console.log("dataj:"+ dataj)
+                    
+                    if(data.result === 'SUCCESS'){
+                        console.log(data.msg.ID)
+
+                        $('.footer').empty()
+                        $('.footer').append(`<br><strong>${cert}</strong><br><br>`)
+                        $('.footer').append(`자산 이름: ${name}<p>`)
+                        $('.footer').append(`color: ${data.msg.color}<p>`)
+                        $('.footer').append(`size: ${data.msg.size}<p>`)
+                        $('.footer').append(`소유자: ${data.msg.owner}<p>`)
+                        $('.footer').append(`자산값: ${data.msg.appraisedValue}<p>`)
+                    }
+                })
+            })
+       })
+    </script>
+     
+   
+</head>
+<body>
+
+    <!-- title -->
+    <div>
+        <h1>자산 조회 페이지 입니다</h1>
+    </div>
+    <br>
+    <!-- title_contents -->
+    <div>
+        <h2>자산조회에 필요한 정보 입력</h2>
+    </div>
+    <br><br>
+    <!-- body -->
+    <div>
+      <label for="cert" class="form-label">인증서 이름</label>
+      <input type="text" class="form-control" id="cert">
+      <br>
+      <label for="name" class="form-label">자산 이름</label>
+      <input type="text" class="form-control" id="name">
+      <br><br>
+      <button class="btn btn-outline-danger" id="btn-read">자산 조회</button>
+    </div><!-- body end -->
+
+    <!-- footer -->
+    <div class="footer">
+
+    </div>
+    
+
+</body>
+</html>
